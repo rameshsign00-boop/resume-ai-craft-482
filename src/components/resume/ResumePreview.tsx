@@ -1,22 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { ResumeData } from "@/types/resume";
+import { TemplateId, RESUME_TEMPLATES } from "@/types/templates";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 interface ResumePreviewProps {
   resumeData: ResumeData;
+  template?: TemplateId;
 }
 
-export const ResumePreview = ({ resumeData }: ResumePreviewProps) => {
+export const ResumePreview = ({ resumeData, template = 'modern' }: ResumePreviewProps) => {
   const { personalInfo, experience, education, skills } = resumeData;
+  const currentTemplate = RESUME_TEMPLATES.find(t => t.id === template);
+
+  const templateStyles = {
+    borderColor: currentTemplate?.primaryColor || 'hsl(var(--primary))',
+    accentColor: currentTemplate?.accentColor || 'hsl(var(--accent))',
+  };
 
   return (
-    <Card className="p-8 bg-card shadow-elegant min-h-[800px]">
+    <Card className="p-8 bg-card shadow-elegant min-h-[800px]" style={{ '--template-primary': templateStyles.borderColor, '--template-accent': templateStyles.accentColor } as any}>
       {/* Header */}
-      <div className="border-b-2 border-primary pb-4 mb-6">
+      <div className="border-b-2 pb-4 mb-6" style={{ borderColor: templateStyles.borderColor }}>
         <h1 className="text-3xl font-bold text-foreground mb-1">
           {personalInfo.fullName || "Your Name"}
         </h1>
-        <p className="text-lg text-primary font-medium mb-3">
+        <p className="text-lg font-medium mb-3" style={{ color: templateStyles.borderColor }}>
           {personalInfo.title || "Professional Title"}
         </p>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -67,7 +75,7 @@ export const ResumePreview = ({ resumeData }: ResumePreviewProps) => {
                     <h3 className="font-semibold text-foreground">
                       {exp.position}
                     </h3>
-                    <p className="text-sm text-primary font-medium">
+                    <p className="text-sm font-medium" style={{ color: templateStyles.borderColor }}>
                       {exp.company}
                     </p>
                   </div>
@@ -98,7 +106,7 @@ export const ResumePreview = ({ resumeData }: ResumePreviewProps) => {
                     <h3 className="font-semibold text-foreground">
                       {edu.degree} in {edu.field}
                     </h3>
-                    <p className="text-sm text-primary font-medium">
+                    <p className="text-sm font-medium" style={{ color: templateStyles.borderColor }}>
                       {edu.institution}
                     </p>
                   </div>
@@ -122,7 +130,11 @@ export const ResumePreview = ({ resumeData }: ResumePreviewProps) => {
             {skills.map((skill, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
+                className="px-3 py-1 rounded-full text-sm font-medium"
+                style={{ 
+                  backgroundColor: `${templateStyles.borderColor}20`,
+                  color: templateStyles.borderColor
+                }}
               >
                 {skill}
               </span>

@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { PersonalInfo } from "@/types/resume";
 import { Sparkles } from "lucide-react";
+import { useAI } from "@/hooks/useAI";
+import { toast } from "sonner";
 
 interface PersonalInfoSectionProps {
   data: PersonalInfo;
@@ -14,10 +17,24 @@ export const PersonalInfoSection = ({
   data,
   onChange,
 }: PersonalInfoSectionProps) => {
-  const handleAIGenerate = () => {
-    // TODO: Integrate with AI
-    const aiSummary = `Experienced ${data.title || "professional"} with a proven track record of delivering exceptional results. Skilled in driving innovation and leading cross-functional teams to achieve organizational goals.`;
-    onChange({ ...data, summary: aiSummary });
+  const { generateContent, loading } = useAI();
+
+  const handleAIGenerate = async () => {
+    if (!data.title) {
+      toast.error("Please add your professional title first");
+      return;
+    }
+
+    try {
+      const summary = await generateContent("summary", {
+        title: data.title,
+        name: data.fullName,
+      });
+      onChange({ ...data, summary });
+      toast.success("Summary generated!");
+    } catch (error) {
+      console.error("AI generation error:", error);
+    }
   };
 
   return (
@@ -84,10 +101,11 @@ export const PersonalInfoSection = ({
             variant="outline"
             size="sm"
             onClick={handleAIGenerate}
+            disabled={loading}
             className="gap-2"
           >
             <Sparkles className="h-3 w-3" />
-            AI Generate
+            {loading ? "Generating..." : "AI Generate"}
           </Button>
         </div>
         <Textarea

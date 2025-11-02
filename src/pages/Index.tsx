@@ -69,18 +69,19 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button
                 size="lg"
-                onClick={() => navigate("/builder")}
+                onClick={() => navigate("/auth")}
                 className="gap-2 bg-gradient-primary shadow-glow text-lg px-8 py-6 animate-scale-in"
               >
                 <Sparkles className="h-5 w-5" />
-                Start Building Free
+                Get Started Free
               </Button>
               <Button
                 size="lg"
                 variant="outline"
+                onClick={() => navigate("/builder")}
                 className="text-lg px-8 py-6 backdrop-blur-sm"
               >
-                View Examples
+                Try Without Signup
               </Button>
             </div>
           </div>
@@ -128,11 +129,11 @@ const Index = () => {
             </p>
             <Button
               size="lg"
-              onClick={() => navigate("/builder")}
+              onClick={() => navigate("/auth")}
               className="gap-2 bg-card text-foreground hover:bg-card/90 text-lg px-8 py-6 shadow-elegant"
             >
               <Sparkles className="h-5 w-5" />
-              Get Started Now
+              Create Free Account
             </Button>
           </div>
         </Card>
