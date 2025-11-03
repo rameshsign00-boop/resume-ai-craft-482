@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Education } from "@/types/resume";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface EducationSectionProps {
@@ -15,6 +16,7 @@ export const EducationSection = ({
   data,
   onChange,
 }: EducationSectionProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const addEducation = () => {
     const newEdu: Education = {
       id: Date.now().toString(),
@@ -44,14 +46,26 @@ export const EducationSection = ({
         <Card key={edu.id} className="p-4 space-y-4 bg-secondary/30">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Education {index + 1}</h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => removeEducation(edu.id)}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingId(edu.id)}
+                className="gap-1"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeEducation(edu.id)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -59,6 +73,7 @@ export const EducationSection = ({
             <Input
               placeholder="University Name"
               value={edu.institution}
+              autoFocus={editingId === edu.id}
               onChange={(e) =>
                 updateEducation(edu.id, { institution: e.target.value })
               }

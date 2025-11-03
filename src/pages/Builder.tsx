@@ -20,8 +20,6 @@ import { ResumeData } from "@/types/resume";
 import { TemplateId } from "@/types/templates";
 import { useAI } from "@/hooks/useAI";
 import { toast } from "sonner";
-import { Navbar } from "@/components/Navbar";
-
 const Builder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -158,9 +156,6 @@ const Builder = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      {/* Navigation Bar */}
-      <Navbar />
-      
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-16 z-40">
         <div className="container mx-auto px-4 py-4">

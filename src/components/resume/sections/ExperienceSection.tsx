@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Experience } from "@/types/resume";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface ExperienceSectionProps {
@@ -17,6 +17,7 @@ export const ExperienceSection = ({
   data,
   onChange,
 }: ExperienceSectionProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const addExperience = () => {
     const newExp: Experience = {
       id: Date.now().toString(),
@@ -46,14 +47,26 @@ export const ExperienceSection = ({
         <Card key={exp.id} className="p-4 space-y-4 bg-secondary/30">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Experience {index + 1}</h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => removeExperience(exp.id)}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingId(exp.id)}
+                className="gap-1"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeExperience(exp.id)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,6 +75,7 @@ export const ExperienceSection = ({
               <Input
                 placeholder="Software Engineer"
                 value={exp.position}
+                autoFocus={editingId === exp.id}
                 onChange={(e) =>
                   updateExperience(exp.id, { position: e.target.value })
                 }

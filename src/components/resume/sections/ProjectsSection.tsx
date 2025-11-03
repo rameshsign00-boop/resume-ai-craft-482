@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Project } from "@/types/resume";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface ProjectsSectionProps {
@@ -15,6 +16,7 @@ export const ProjectsSection = ({
   data,
   onChange,
 }: ProjectsSectionProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const addProject = () => {
     const newProject: Project = {
       id: Date.now().toString(),
@@ -44,14 +46,26 @@ export const ProjectsSection = ({
         <Card key={project.id} className="p-4 space-y-4 bg-secondary/30">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Project {index + 1}</h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => removeProject(project.id)}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingId(project.id)}
+                className="gap-1"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeProject(project.id)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -59,6 +73,7 @@ export const ProjectsSection = ({
             <Input
               placeholder="E-commerce Platform"
               value={project.name}
+              autoFocus={editingId === project.id}
               onChange={(e) =>
                 updateProject(project.id, { name: e.target.value })
               }

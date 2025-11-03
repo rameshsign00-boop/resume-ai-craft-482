@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Edit, Check, Ban } from "lucide-react";
 
 interface SkillsSectionProps {
   data: string[];
@@ -12,6 +12,8 @@ interface SkillsSectionProps {
 
 export const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [editingSkill, setEditingSkill] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const addSkill = () => {
     if (inputValue.trim() && !data.includes(inputValue.trim())) {
@@ -22,6 +24,10 @@ export const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
 
   const removeSkill = (skill: string) => {
     onChange(data.filter((s) => s !== skill));
+    if (editingSkill === skill) {
+      setEditingSkill(null);
+      setEditValue("");
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -31,6 +37,25 @@ export const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
     }
   };
 
+  const startEdit = (skill: string) => {
+    setEditingSkill(skill);
+    setEditValue(skill);
+  };
+
+  const saveEdit = () => {
+    if (!editingSkill) return;
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    const updated = data.map((s) => (s === editingSkill ? trimmed : s));
+    onChange(updated);
+    setEditingSkill(null);
+    setEditValue("");
+  };
+
+  const cancelEdit = () => {
+    setEditingSkill(null);
+    setEditValue("");
+  };
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -54,22 +79,50 @@ export const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
           <Label>Your Skills</Label>
           <div className="flex flex-wrap gap-2">
             {data.map((skill) => (
-              <Badge
-                key={skill}
-                variant="secondary"
-                className="gap-1 pr-1 text-sm"
-              >
-                {skill}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 hover:bg-transparent"
-                  onClick={() => removeSkill(skill)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
+              <div key={skill} className="flex items-center gap-2">
+                {editingSkill === skill ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="h-8"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEdit();
+                        if (e.key === "Escape") cancelEdit();
+                      }}
+                      autoFocus
+                    />
+                    <Button type="button" size="sm" variant="secondary" className="h-8 px-2" onClick={saveEdit}>
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-8 px-2" onClick={cancelEdit}>
+                      <Ban className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Badge variant="secondary" className="gap-1 pr-1 text-sm">
+                    {skill}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => startEdit(skill)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => removeSkill(skill)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+              </div>
             ))}
           </div>
         </div>

@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { PersonalInfo } from "@/types/resume";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Trash2 } from "lucide-react";
 import { useAI } from "@/hooks/useAI";
 import { toast } from "sonner";
 
@@ -39,6 +39,28 @@ export const PersonalInfoSection = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="gap-2"
+          onClick={() =>
+            onChange({
+              fullName: "",
+              email: "",
+              phone: "",
+              location: "",
+              linkedin: "",
+              title: "",
+              summary: "",
+            })
+          }
+        >
+          <Trash2 className="h-3 w-3" />
+          Clear All
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="fullName">Full Name</Label>
