@@ -20,6 +20,7 @@ import { ResumeData } from "@/types/resume";
 import { TemplateId } from "@/types/templates";
 import { useAI } from "@/hooks/useAI";
 import { toast } from "sonner";
+import { Navbar } from "@/components/Navbar";
 
 const Builder = () => {
   const navigate = useNavigate();
@@ -34,12 +35,14 @@ const Builder = () => {
       email: "",
       phone: "",
       location: "",
+      linkedin: "",
       title: "",
       summary: "",
     },
     experience: [],
     education: [],
     skills: [],
+    projects: [],
   });
   const [template, setTemplate] = useState<TemplateId>("modern");
   const [title, setTitle] = useState("My Resume");
@@ -81,6 +84,7 @@ const Builder = () => {
         experience: data.experience as any,
         education: data.education as any,
         skills: data.skills as any,
+        projects: (data.projects as any) || [],
       });
     } catch (error: any) {
       console.error("Error loading resume:", error);
@@ -105,6 +109,7 @@ const Builder = () => {
         experience: resumeData.experience as any,
         education: resumeData.education as any,
         skills: resumeData.skills as any,
+        projects: resumeData.projects as any,
       };
 
       if (resumeId) {
@@ -153,8 +158,11 @@ const Builder = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
+      {/* Navigation Bar */}
+      <Navbar />
+      
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
+      <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-16 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button

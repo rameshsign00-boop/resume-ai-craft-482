@@ -4,8 +4,9 @@ import { PersonalInfoSection } from "./sections/PersonalInfoSection";
 import { ExperienceSection } from "./sections/ExperienceSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
+import { ProjectsSection } from "./sections/ProjectsSection";
 import { ResumeData } from "@/types/resume";
-import { User, Briefcase, GraduationCap, Sparkles } from "lucide-react";
+import { User, Briefcase, GraduationCap, Sparkles, FolderKanban } from "lucide-react";
 
 interface ResumeFormProps {
   resumeData: ResumeData;
@@ -16,7 +17,7 @@ export const ResumeForm = ({ resumeData, setResumeData }: ResumeFormProps) => {
   return (
     <Card className="p-6 backdrop-blur-sm bg-card/80 border-border/50">
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="personal" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Personal</span>
@@ -32,6 +33,10 @@ export const ResumeForm = ({ resumeData, setResumeData }: ResumeFormProps) => {
           <TabsTrigger value="skills" className="gap-2">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Skills</span>
+          </TabsTrigger>
+          <TabsTrigger value="projects" className="gap-2">
+            <FolderKanban className="h-4 w-4" />
+            <span className="hidden sm:inline">Projects</span>
           </TabsTrigger>
         </TabsList>
 
@@ -66,6 +71,13 @@ export const ResumeForm = ({ resumeData, setResumeData }: ResumeFormProps) => {
           <SkillsSection
             data={resumeData.skills}
             onChange={(skills) => setResumeData({ ...resumeData, skills })}
+          />
+        </TabsContent>
+
+        <TabsContent value="projects" className="space-y-4">
+          <ProjectsSection
+            data={resumeData.projects}
+            onChange={(projects) => setResumeData({ ...resumeData, projects })}
           />
         </TabsContent>
       </Tabs>

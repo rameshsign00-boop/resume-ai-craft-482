@@ -45,6 +45,7 @@ export type Database = {
           experience: Json
           id: string
           personal_info: Json
+          projects: Json
           skills: Json
           template: string
           title: string
@@ -57,6 +58,7 @@ export type Database = {
           experience?: Json
           id?: string
           personal_info?: Json
+          projects?: Json
           skills?: Json
           template?: string
           title: string
@@ -69,6 +71,7 @@ export type Database = {
           experience?: Json
           id?: string
           personal_info?: Json
+          projects?: Json
           skills?: Json
           template?: string
           title?: string

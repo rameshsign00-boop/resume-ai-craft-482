@@ -3,6 +3,7 @@ export interface PersonalInfo {
   email: string;
   phone: string;
   location: string;
+  linkedin: string;
   title: string;
   summary: string;
 }
@@ -27,9 +28,20 @@ export interface Education {
   current: boolean;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  technologies: string;
+  link: string;
+  startDate: string;
+  endDate: string;
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   experience: Experience[];
   education: Education[];
   skills: string[];
+  projects: Project[];
 }

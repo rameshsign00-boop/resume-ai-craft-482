@@ -83,14 +83,25 @@ export const PersonalInfoSection = ({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="location">Location</Label>
-        <Input
-          id="location"
-          placeholder="San Francisco, CA"
-          value={data.location}
-          onChange={(e) => onChange({ ...data, location: e.target.value })}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <Input
+            id="location"
+            placeholder="San Francisco, CA"
+            value={data.location}
+            onChange={(e) => onChange({ ...data, location: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="linkedin">LinkedIn</Label>
+          <Input
+            id="linkedin"
+            placeholder="linkedin.com/in/johndoe"
+            value={data.linkedin}
+            onChange={(e) => onChange({ ...data, linkedin: e.target.value })}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
