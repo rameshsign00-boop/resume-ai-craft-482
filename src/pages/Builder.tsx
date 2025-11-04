@@ -150,8 +150,48 @@ const Builder = () => {
     }
   };
 
-  const handleExport = () => {
-    toast.info("PDF export feature coming soon!");
+  const handleExport = async () => {
+    try {
+      toast.info("Generating PDF...");
+      
+      // Dynamically import libraries
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      
+      // Get the resume preview element
+      const previewElement = document.getElementById('resume-preview');
+      if (!previewElement) {
+        toast.error("Could not find resume preview");
+        return;
+      }
+
+      // Capture the element as canvas
+      const canvas = await html2canvas(previewElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      // Convert to PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${title || 'resume'}.pdf`);
+      
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("Failed to export PDF");
+    }
   };
 
   return (
@@ -290,7 +330,7 @@ const Builder = () => {
 
           {/* Preview Section */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <div className="animate-scale-in">
+            <div className="animate-scale-in" id="resume-preview">
               <ResumePreview resumeData={resumeData} template={template} />
             </div>
           </div>

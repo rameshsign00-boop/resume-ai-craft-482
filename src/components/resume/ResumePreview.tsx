@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ResumeData } from "@/types/resume";
 import { TemplateId, RESUME_TEMPLATES } from "@/types/templates";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, ExternalLink } from "lucide-react";
 
 interface ResumePreviewProps {
   resumeData: ResumeData;
@@ -9,7 +9,7 @@ interface ResumePreviewProps {
 }
 
 export const ResumePreview = ({ resumeData, template = 'modern' }: ResumePreviewProps) => {
-  const { personalInfo, experience, education, skills } = resumeData;
+  const { personalInfo, experience, education, skills, projects } = resumeData;
   const currentTemplate = RESUME_TEMPLATES.find(t => t.id === template);
 
   const templateStyles = {
@@ -44,6 +44,12 @@ export const ResumePreview = ({ resumeData, template = 'modern' }: ResumePreview
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               {personalInfo.location}
+            </div>
+          )}
+          {personalInfo.linkedin && (
+            <div className="flex items-center gap-1">
+              <Linkedin className="h-3 w-3" />
+              {personalInfo.linkedin}
             </div>
           )}
         </div>
@@ -122,7 +128,7 @@ export const ResumePreview = ({ resumeData, template = 'modern' }: ResumePreview
 
       {/* Skills */}
       {skills.length > 0 && (
-        <div>
+        <div className="mb-6">
           <h2 className="text-xl font-bold text-foreground mb-3 border-b border-border pb-1">
             Skills
           </h2>
@@ -143,11 +149,56 @@ export const ResumePreview = ({ resumeData, template = 'modern' }: ResumePreview
         </div>
       )}
 
+      {/* Projects */}
+      {projects.length > 0 && (
+        <div>
+          <h2 className="text-xl font-bold text-foreground mb-3 border-b border-border pb-1">
+            Projects
+          </h2>
+          <div className="space-y-4">
+            {projects.map((project) => (
+              <div key={project.id}>
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-foreground">
+                        {project.name}
+                      </h3>
+                      {project.link && (
+                        <a 
+                          href={project.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs"
+                          style={{ color: templateStyles.borderColor }}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {project.technologies}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {project.startDate} - {project.endDate}
+                  </p>
+                </div>
+                <p className="text-sm text-foreground/70 leading-relaxed">
+                  {project.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
       {!personalInfo.fullName &&
         experience.length === 0 &&
         education.length === 0 &&
-        skills.length === 0 && (
+        skills.length === 0 &&
+        projects.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <p>Start filling in your details to see your resume preview</p>
           </div>
