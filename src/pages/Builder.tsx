@@ -15,11 +15,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Save, Target } from "lucide-react";
+import { ArrowLeft, Download, Save, Target } from "lucide-react";
 import { ResumeData } from "@/types/resume";
 import { TemplateId } from "@/types/templates";
 import { useAI } from "@/hooks/useAI";
 import { toast } from "sonner";
+import { exportResumeToPDF } from "@/utils/pdfExport";
+import { ResumeUploader } from "@/components/resume/ResumeUploader";
 const Builder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -150,6 +152,21 @@ const Builder = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      toast.info("Generating PDF...");
+      await exportResumeToPDF('resume-preview', title || 'resume');
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("Failed to export PDF");
+    }
+  };
+
+  const handleResumeParsed = (parsedData: ResumeData) => {
+    setResumeData(parsedData);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -254,6 +271,11 @@ const Builder = () => {
                   {saving ? "Saving..." : "Save"}
                 </Button>
               )}
+
+              <Button onClick={handleExport} className="gap-2 bg-gradient-primary">
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
             </div>
           </div>
         </div>
@@ -272,6 +294,8 @@ const Builder = () => {
                 Fill in your details and watch your resume come to life
               </p>
             </div>
+
+            <ResumeUploader onParsed={handleResumeParsed} />
 
             <Card className="p-4 backdrop-blur-sm bg-card/80 border-border/50">
               <TemplateSelector selected={template} onSelect={setTemplate} />
