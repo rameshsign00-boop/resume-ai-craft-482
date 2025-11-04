@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Download, Sparkles, Save, Target } from "lucide-react";
+import { ArrowLeft, Save, Target } from "lucide-react";
 import { ResumeData } from "@/types/resume";
 import { TemplateId } from "@/types/templates";
 import { useAI } from "@/hooks/useAI";
@@ -150,49 +150,6 @@ const Builder = () => {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      toast.info("Generating PDF...");
-      
-      // Dynamically import libraries
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-      
-      // Get the resume preview element
-      const previewElement = document.getElementById('resume-preview');
-      if (!previewElement) {
-        toast.error("Could not find resume preview");
-        return;
-      }
-
-      // Capture the element as canvas
-      const canvas = await html2canvas(previewElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
-
-      // Convert to PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`${title || 'resume'}.pdf`);
-      
-      toast.success("PDF downloaded successfully!");
-    } catch (error) {
-      console.error("PDF export error:", error);
-      toast.error("Failed to export PDF");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -297,11 +254,6 @@ const Builder = () => {
                   {saving ? "Saving..." : "Save"}
                 </Button>
               )}
-
-              <Button onClick={handleExport} className="gap-2 bg-gradient-primary">
-                <Download className="h-4 w-4" />
-                Export PDF
-              </Button>
             </div>
           </div>
         </div>
