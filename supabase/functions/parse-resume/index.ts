@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { file, fileName, fileType } = await req.json();
+    const { text, file, fileName, fileType } = await req.json();
 
     // Get API key from environment
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -19,8 +19,10 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Remove base64 prefix if present
-    const base64Data = file.includes('base64,') ? file.split('base64,')[1] : file;
+    // Remove base64 prefix if present (legacy support)
+    const base64Data = typeof file === 'string' && file.includes('base64,')
+      ? file.split('base64,')[1]
+      : (typeof file === 'string' ? file : '');
 
     // Prepare prompt for AI
     const systemPrompt = `You are a resume parser. Extract structured information from the resume and return it in JSON format.
@@ -71,8 +73,11 @@ Return ONLY valid JSON with this exact structure:
   ]
 }`;
 
-    const userPrompt = `Parse this ${fileType} resume file (base64 encoded) and extract all information: ${base64Data.substring(0, 1000)}... (truncated for prompt)`;
-
+    const inputText = typeof text === 'string' ? text : '';
+    const snippet = inputText.length > 12000 ? inputText.slice(0, 12000) : inputText;
+    const userPrompt = inputText
+      ? `Parse this resume PLAIN TEXT and extract all information. Return ONLY JSON matching the schema.\n\n${snippet}`
+      : `No plain text provided. If a file was uploaded by an older client, ignore it and return an empty-but-valid JSON per the schema with empty strings/arrays.`;
     // Call Lovable AI Gateway
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -109,8 +114,8 @@ Return ONLY valid JSON with this exact structure:
       throw new Error('No response from AI');
     }
 
-    // Parse the JSON response
-    let resumeData;
+    // Parse the JSON response and normalize to schema
+    let resumeData: any;
     try {
       // Extract JSON from markdown code blocks if present
       const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
@@ -121,8 +126,53 @@ Return ONLY valid JSON with this exact structure:
       throw new Error('Invalid response format from AI');
     }
 
+    // Normalize to expected ResumeData shape
+    const toStr = (v: any) => (typeof v === 'string' ? v.trim() : '');
+    const ensureArr = (v: any) => (Array.isArray(v) ? v : []);
+    const genId = (p: string, i: number) => `${p}-${Date.now()}-${i}`;
+
+    const normalized = {
+      personalInfo: {
+        fullName: toStr(resumeData?.personalInfo?.fullName),
+        email: toStr(resumeData?.personalInfo?.email),
+        phone: toStr(resumeData?.personalInfo?.phone),
+        location: toStr(resumeData?.personalInfo?.location),
+        linkedin: toStr(resumeData?.personalInfo?.linkedin),
+        title: toStr(resumeData?.personalInfo?.title),
+        summary: toStr(resumeData?.personalInfo?.summary),
+      },
+      experience: ensureArr(resumeData?.experience).map((it: any, i: number) => ({
+        id: toStr(it?.id) || genId('exp', i),
+        company: toStr(it?.company),
+        position: toStr(it?.position),
+        startDate: toStr(it?.startDate),
+        endDate: toStr(it?.endDate),
+        current: Boolean((it as any)?.current) || toStr(it?.endDate).toLowerCase() === 'present',
+        description: toStr(it?.description),
+      })),
+      education: ensureArr(resumeData?.education).map((it: any, i: number) => ({
+        id: toStr(it?.id) || genId('edu', i),
+        institution: toStr(it?.institution),
+        degree: toStr(it?.degree),
+        field: toStr(it?.field),
+        startDate: toStr(it?.startDate),
+        endDate: toStr(it?.endDate),
+        current: Boolean((it as any)?.current) || false,
+      })),
+      skills: ensureArr(resumeData?.skills).map((s: any) => toStr(s)).filter(Boolean),
+      projects: ensureArr(resumeData?.projects).map((it: any, i: number) => ({
+        id: toStr(it?.id) || genId('prj', i),
+        name: toStr(it?.name),
+        description: toStr(it?.description),
+        technologies: toStr(it?.technologies),
+        link: toStr(it?.link),
+        startDate: toStr(it?.startDate),
+        endDate: toStr(it?.endDate),
+      })),
+    };
+
     return new Response(
-      JSON.stringify({ resumeData }),
+      JSON.stringify({ resumeData: normalized }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 

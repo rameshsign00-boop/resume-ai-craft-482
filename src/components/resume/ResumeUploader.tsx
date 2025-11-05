@@ -6,6 +6,19 @@ import { Upload, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ResumeData } from "@/types/resume";
+import * as pdfjsLib from "pdfjs-dist";
+// Try to set the worker src for pdf.js (Vite will turn this into a URL)
+// It's safe to ignore if it fails in some environments.
+try {
+  // @ts-ignore - dynamic import with ?url is fine in Vite
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  import("pdfjs-dist/build/pdf.worker.mjs?url").then((m: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pdfjsLib as any).GlobalWorkerOptions && ((pdfjsLib as any).GlobalWorkerOptions.workerSrc = m.default);
+  });
+} catch {}
+import mammoth from "mammoth";
 
 interface ResumeUploaderProps {
   onParsed: (data: ResumeData) => void;
@@ -14,6 +27,23 @@ interface ResumeUploaderProps {
 export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string>("");
+
+  const extractPdfText = async (arrayBuffer: ArrayBuffer) => {
+    const pdf = await (pdfjsLib as any).getDocument({ data: arrayBuffer }).promise;
+    let text = "";
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const content = await page.getTextContent();
+      const strings = (content.items || []).map((item: any) => (item.str || ""));
+      text += strings.join(" ") + "\n";
+    }
+    return text.trim();
+  };
+
+  const extractDocxText = async (arrayBuffer: ArrayBuffer) => {
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return (result.value || "").trim();
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,46 +60,53 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
     setUploading(true);
 
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      
-      reader.onload = async () => {
-        const base64 = reader.result as string;
-        
-        // Call edge function to parse resume
-        const { data, error } = await supabase.functions.invoke('parse-resume', {
-          body: { 
-            file: base64,
-            fileName: file.name,
-            fileType: file.type
-          },
-        });
+      const arrayBuffer = await file.arrayBuffer();
+      let text = "";
+      if (file.type === 'application/pdf') {
+        text = await extractPdfText(arrayBuffer);
+      } else {
+        text = await extractDocxText(arrayBuffer);
+      }
 
-        if (error) {
-          console.error('Parse error:', error);
-          toast.error("Failed to parse resume. Please try again.");
-          setUploading(false);
-          return;
-        }
+      if (!text) {
+        toast.error("Could not read text from file. Please try a different file.");
+        setUploading(false);
+        return;
+      }
 
-        if (data && data.resumeData) {
-          onParsed(data.resumeData);
-          toast.success("Resume parsed successfully!");
+      // Call edge function to parse resume text
+      const { data, error } = await supabase.functions.invoke('parse-resume', {
+        body: { 
+          text,
+          fileName: file.name,
+          fileType: file.type
+        },
+      });
+
+      if (error) {
+        console.error('Parse error:', error);
+        if ((error.message || '').includes('429')) {
+          toast.error("Rate limit exceeded. Please try again in a moment.");
+        } else if ((error.message || '').includes('402')) {
+          toast.error("AI credits exhausted. Please add credits to continue.");
         } else {
-          toast.error("Could not extract data from resume");
+          toast.error("Failed to parse resume. Please try again.");
         }
-        
         setUploading(false);
-      };
+        return;
+      }
 
-      reader.onerror = () => {
-        toast.error("Failed to read file");
-        setUploading(false);
-      };
+      if (data && data.resumeData) {
+        onParsed(data.resumeData as ResumeData);
+        toast.success("Resume parsed successfully!");
+      } else {
+        toast.error("Could not extract data from resume");
+      }
+      
+      setUploading(false);
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error("Failed to upload resume");
+      toast.error("Failed to process file");
       setUploading(false);
     }
   };
