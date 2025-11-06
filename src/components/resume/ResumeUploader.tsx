@@ -2,7 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Upload, FileText, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ResumeData } from "@/types/resume";
@@ -27,6 +37,8 @@ interface ResumeUploaderProps {
 export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string>("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const extractPdfText = async (arrayBuffer: ArrayBuffer) => {
     const pdf = await (pdfjsLib as any).getDocument({ data: arrayBuffer }).promise;
@@ -45,7 +57,7 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
     return (result.value || "").trim();
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -56,13 +68,30 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
       return;
     }
 
+    setPendingFile(file);
     setFileName(file.name);
+    setShowConfirmDialog(true);
+    
+    // Reset the input
+    event.target.value = '';
+  };
+
+  const handleCancelFile = () => {
+    setPendingFile(null);
+    setFileName("");
+    setShowConfirmDialog(false);
+  };
+
+  const handleConfirmParse = async () => {
+    if (!pendingFile) return;
+    
+    setShowConfirmDialog(false);
     setUploading(true);
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
+      const arrayBuffer = await pendingFile.arrayBuffer();
       let text = "";
-      if (file.type === 'application/pdf') {
+      if (pendingFile.type === 'application/pdf') {
         text = await extractPdfText(arrayBuffer);
       } else {
         text = await extractDocxText(arrayBuffer);
@@ -71,6 +100,8 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
       if (!text) {
         toast.error("Could not read text from file. Please try a different file.");
         setUploading(false);
+        setPendingFile(null);
+        setFileName("");
         return;
       }
 
@@ -78,8 +109,8 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
       const { data, error } = await supabase.functions.invoke('parse-resume', {
         body: { 
           text,
-          fileName: file.name,
-          fileType: file.type
+          fileName: pendingFile.name,
+          fileType: pendingFile.type
         },
       });
 
@@ -93,6 +124,8 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
           toast.error("Failed to parse resume. Please try again.");
         }
         setUploading(false);
+        setPendingFile(null);
+        setFileName("");
         return;
       }
 
@@ -104,61 +137,94 @@ export const ResumeUploader = ({ onParsed }: ResumeUploaderProps) => {
       }
       
       setUploading(false);
+      setPendingFile(null);
+      setFileName("");
     } catch (error) {
       console.error('Upload error:', error);
       toast.error("Failed to process file");
       setUploading(false);
+      setPendingFile(null);
+      setFileName("");
     }
   };
 
   return (
-    <Card className="p-6 border-dashed border-2 hover:border-primary/50 transition-colors">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <Label className="text-base font-semibold">Upload Existing Resume</Label>
-            <p className="text-sm text-muted-foreground">
-              Parse your existing resume (PDF or DOCX)
-            </p>
+    <>
+      <Card className="p-6 border-dashed border-2 hover:border-primary/50 transition-colors">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <FileText className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <Label className="text-base font-semibold">Upload Existing Resume</Label>
+              <p className="text-sm text-muted-foreground">
+                Parse your existing resume (PDF or DOCX)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="relative overflow-hidden"
+              disabled={uploading}
+              asChild
+            >
+              <label className="cursor-pointer">
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Parsing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose File
+                  </>
+                )}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.docx"
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                />
+              </label>
+            </Button>
+            {fileName && !uploading && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground truncate">
+                  {fileName}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleCancelFile}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
+      </Card>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="relative overflow-hidden"
-            disabled={uploading}
-            asChild
-          >
-            <label className="cursor-pointer">
-              {uploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Parsing...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choose File
-                </>
-              )}
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.docx"
-                onChange={handleFileUpload}
-                disabled={uploading}
-              />
-            </label>
-          </Button>
-          {fileName && (
-            <span className="text-sm text-muted-foreground truncate">
-              {fileName}
-            </span>
-          )}
-        </div>
-      </div>
-    </Card>
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Resume Import</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to parse and import "{fileName}"? This will extract the resume data and populate the form.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelFile}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmParse}>
+              Confirm & Parse
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
