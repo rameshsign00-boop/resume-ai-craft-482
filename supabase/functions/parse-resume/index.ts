@@ -78,52 +78,149 @@ Return ONLY valid JSON with this exact structure:
     const userPrompt = inputText
       ? `Parse this resume PLAIN TEXT and extract all information. Return ONLY JSON matching the schema.\n\n${snippet}`
       : `No plain text provided. If a file was uploaded by an older client, ignore it and return an empty-but-valid JSON per the schema with empty strings/arrays.`;
-    // Call Lovable AI Gateway
+    // Call Lovable AI Gateway using tool-calling for structured output
+    const body: any = {
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      // Force tool calling so the model returns strictly structured JSON as arguments
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'extract_resume',
+            description: 'Extract resume data strictly following the provided JSON schema.',
+            parameters: {
+              type: 'object',
+              properties: {
+                personalInfo: {
+                  type: 'object',
+                  properties: {
+                    fullName: { type: 'string' },
+                    email: { type: 'string' },
+                    phone: { type: 'string' },
+                    location: { type: 'string' },
+                    linkedin: { type: 'string' },
+                    title: { type: 'string' },
+                    summary: { type: 'string' }
+                  },
+                  required: ['fullName','email','phone','location','linkedin','title','summary'],
+                  additionalProperties: false
+                },
+                experience: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      company: { type: 'string' },
+                      position: { type: 'string' },
+                      startDate: { type: 'string' },
+                      endDate: { type: 'string' },
+                      current: { type: 'boolean' },
+                      description: { type: 'string' }
+                    },
+                    required: ['id','company','position','startDate','endDate','current','description'],
+                    additionalProperties: false
+                  }
+                },
+                education: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      institution: { type: 'string' },
+                      degree: { type: 'string' },
+                      field: { type: 'string' },
+                      startDate: { type: 'string' },
+                      endDate: { type: 'string' },
+                      current: { type: 'boolean' }
+                    },
+                    required: ['id','institution','degree','field','startDate','endDate','current'],
+                    additionalProperties: false
+                  }
+                },
+                skills: { type: 'array', items: { type: 'string' } },
+                projects: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      name: { type: 'string' },
+                      description: { type: 'string' },
+                      technologies: { type: 'string' },
+                      link: { type: 'string' },
+                      startDate: { type: 'string' },
+                      endDate: { type: 'string' }
+                    },
+                    required: ['id','name','description','technologies','link','startDate','endDate'],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ['personalInfo','experience','education','skills','projects'],
+              additionalProperties: false
+            }
+          }
+        }
+      ],
+      tool_choice: { type: 'function', function: { name: 'extract_resume' } }
+    };
+
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI API error:', errorText);
-      
+      console.error('AI API error:', aiResponse.status, errorText);
+
       if (aiResponse.status === 429) {
         throw new Error('Rate limit exceeded');
       } else if (aiResponse.status === 402) {
         throw new Error('AI credits exhausted');
       }
-      
+
       throw new Error('AI processing failed');
     }
 
     const aiData = await aiResponse.json();
-    const content = aiData.choices[0]?.message?.content;
 
-    if (!content) {
-      throw new Error('No response from AI');
+    // Prefer tool call arguments for guaranteed JSON
+    const toolArgs = aiData?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    let resumeData: any;
+
+    if (toolArgs && typeof toolArgs === 'string') {
+      try {
+        resumeData = JSON.parse(toolArgs);
+      } catch (e) {
+        console.error('Failed to parse tool arguments:', toolArgs);
+      }
     }
 
-    // Parse the JSON response and normalize to schema
-    let resumeData: any;
-    try {
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
-      const jsonString = jsonMatch ? jsonMatch[1] : content;
-      resumeData = JSON.parse(jsonString);
-    } catch (e) {
-      console.error('Failed to parse AI response:', content);
-      throw new Error('Invalid response format from AI');
+    // Fallback to plain content JSON parsing if tool call missing
+    if (!resumeData) {
+      const content = aiData?.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('No response from AI');
+      }
+      try {
+        const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : content;
+        resumeData = JSON.parse(jsonString);
+      } catch (e) {
+        console.error('Failed to parse AI content:', content);
+        throw new Error('Invalid response format from AI');
+      }
     }
 
     // Normalize to expected ResumeData shape
