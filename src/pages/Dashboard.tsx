@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { PremiumButton } from "@/components/ui/premium-button";
 import {
   Plus,
   FileText,
@@ -98,13 +99,14 @@ const Dashboard = () => {
               <h1 className="text-2xl font-bold">My Resumes</h1>
             </div>
             <div className="flex gap-2">
-              <Button
+              <PremiumButton
                 onClick={() => navigate("/builder")}
-                className="gap-2 bg-gradient-primary"
+                variant="primary"
+                className="gap-2"
               >
                 <Plus className="h-4 w-4" />
                 New Resume
-              </Button>
+              </PremiumButton>
               <Button variant="ghost" onClick={handleSignOut} className="gap-2">
                 <LogOut className="h-4 w-4" />
                 Sign Out
@@ -127,26 +129,28 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Loading your resumes...</p>
           </div>
         ) : resumes.length === 0 ? (
-          <Card className="p-12 text-center backdrop-blur-sm bg-card/80 border-border/50 animate-scale-in">
+          <GlassCard variant="default" className="p-12 text-center animate-scale-in">
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-2xl font-semibold mb-2">No resumes yet</h3>
             <p className="text-muted-foreground mb-6">
               Create your first resume and let AI help you shine
             </p>
-            <Button
+            <PremiumButton
               onClick={() => navigate("/builder")}
-              className="gap-2 bg-gradient-primary"
+              variant="primary"
+              className="gap-2"
             >
               <Plus className="h-4 w-4" />
               Create Your First Resume
-            </Button>
-          </Card>
+            </PremiumButton>
+          </GlassCard>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {resumes.map((resume, index) => (
-              <Card
+              <GlassCard
                 key={resume.id}
-                className="p-6 backdrop-blur-sm bg-card/80 border-border/50 hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+                variant="subtle"
+                className="p-6 hover:shadow-glow transition-all duration-300 hover:-translate-y-1 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -182,7 +186,7 @@ const Dashboard = () => {
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
-              </Card>
+              </GlassCard>
             ))}
           </div>
         )}

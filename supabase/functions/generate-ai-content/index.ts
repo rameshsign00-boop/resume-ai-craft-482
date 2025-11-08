@@ -41,6 +41,14 @@ serve(async (req) => {
       userPrompt = `Suggest skills for:
       Title: ${data.title}
       Experience: ${JSON.stringify(data.experience || [])}`;
+    } else if (type === 'bullet-points') {
+      systemPrompt = 'You are an expert resume writer. Transform the provided job description into 3 different versions of achievement-focused bullet points. Each version should have 3-5 bullet points using strong action verbs and quantifiable results where possible. Format: return EXACTLY 3 versions separated by "---VERSION---". Each bullet point should start with "• ".';
+      userPrompt = `Create 3 versions of bullet points for:
+      Position: ${data.jobTitle}
+      Company: ${data.company}
+      Current description: ${data.description}
+      
+      Return exactly 3 versions separated by ---VERSION---`;
     }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

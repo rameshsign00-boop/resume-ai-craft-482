@@ -5,7 +5,8 @@ import { ResumeForm } from "@/components/resume/ResumeForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { TemplateSelector } from "@/components/resume/TemplateSelector";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { PremiumButton } from "@/components/ui/premium-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -213,7 +214,7 @@ const Builder = () => {
                     </Button>
 
                     {matchResult && (
-                      <Card className="p-6 bg-secondary/30">
+                      <GlassCard variant="premium" className="p-6">
                         <div className="space-y-4">
                           <div>
                             <h3 className="text-2xl font-bold text-center mb-2">
@@ -254,7 +255,7 @@ const Builder = () => {
                             </ul>
                           </div>
                         </div>
-                      </Card>
+                      </GlassCard>
                     )}
                   </div>
                 </DialogContent>
@@ -272,10 +273,10 @@ const Builder = () => {
                 </Button>
               )}
 
-              <Button onClick={handleExport} className="gap-2 bg-gradient-primary">
+              <PremiumButton onClick={handleExport} variant="primary" className="gap-2">
                 <Download className="h-4 w-4" />
                 Export PDF
-              </Button>
+              </PremiumButton>
             </div>
           </div>
         </div>
@@ -297,9 +298,9 @@ const Builder = () => {
 
             <ResumeUploader onParsed={handleResumeParsed} />
 
-            <Card className="p-4 backdrop-blur-sm bg-card/80 border-border/50">
+            <GlassCard variant="subtle" className="p-4">
               <TemplateSelector selected={template} onSelect={setTemplate} />
-            </Card>
+            </GlassCard>
 
             <ResumeForm resumeData={resumeData} setResumeData={setResumeData} />
           </div>

@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/premium-button";
+import { GlassCard } from "@/components/ui/glass-card";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Zap, Shield, Wand2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -67,22 +68,23 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Button
+              <PremiumButton
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="gap-2 bg-gradient-primary shadow-glow text-lg px-8 py-6 animate-scale-in"
+                variant="primary"
+                className="gap-2 text-lg px-8 py-6 animate-scale-in"
               >
                 <Sparkles className="h-5 w-5" />
                 Get Started Free
-              </Button>
-              <Button
+              </PremiumButton>
+              <PremiumButton
                 size="lg"
-                variant="outline"
+                variant="glass"
                 onClick={() => navigate("/builder")}
-                className="text-lg px-8 py-6 backdrop-blur-sm"
+                className="text-lg px-8 py-6"
               >
                 Try Without Signup
-              </Button>
+              </PremiumButton>
             </div>
           </div>
         </div>
@@ -101,42 +103,44 @@ const Index = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {features.map((feature, index) => (
-            <Card
+            <GlassCard
               key={index}
-              className="p-6 backdrop-blur-sm bg-card/80 border-border/50 hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+              variant="subtle"
+              className="p-6 hover:shadow-glow transition-all duration-300 hover:-translate-y-1 animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4 shadow-glow">
                 <feature.icon className="h-6 w-6 text-primary-foreground" />
               </div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
-            </Card>
+            </GlassCard>
           ))}
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20">
-        <Card className="relative overflow-hidden backdrop-blur-sm bg-gradient-primary p-12 text-center">
+        <GlassCard variant="premium" className="relative overflow-hidden p-12 text-center">
           <div className="absolute inset-0 bg-gradient-accent opacity-20 animate-glow" />
           <div className="relative space-y-6 animate-scale-in">
-            <h2 className="text-3xl lg:text-5xl font-bold text-primary-foreground">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground">
               Ready to Build Your Future?
             </h2>
-            <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Join thousands of job seekers who've landed their dream jobs with our AI-powered resume builder
             </p>
-            <Button
+            <PremiumButton
               size="lg"
               onClick={() => navigate("/auth")}
-              className="gap-2 bg-card text-foreground hover:bg-card/90 text-lg px-8 py-6 shadow-elegant"
+              variant="glass"
+              className="gap-2 text-lg px-8 py-6 shadow-elegant bg-card/90 backdrop-blur-xl"
             >
               <Sparkles className="h-5 w-5" />
               Create Free Account
-            </Button>
+            </PremiumButton>
           </div>
-        </Card>
+        </GlassCard>
       </section>
     </div>
   );

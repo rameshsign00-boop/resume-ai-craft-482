@@ -65,9 +65,43 @@ export const useAI = () => {
     }
   };
 
+  const enhanceBulletPoints = async (description: string, jobTitle: string, company: string) => {
+    setLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke(
+        "generate-ai-content",
+        {
+          body: { 
+            type: 'bullet-points', 
+            data: { description, jobTitle, company } 
+          },
+        }
+      );
+
+      if (error) {
+        if (error.message?.includes('429')) {
+          toast.error("Rate limit exceeded. Please try again in a moment.");
+        } else if (error.message?.includes('402')) {
+          toast.error("AI credits exhausted. Please add credits to continue.");
+        } else {
+          toast.error("Failed to enhance bullet points");
+        }
+        throw error;
+      }
+
+      return result.content;
+    } catch (error) {
+      console.error("Bullet point enhancement error:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     generateContent,
     analyzeJobMatch,
+    enhanceBulletPoints,
     loading,
   };
 };
